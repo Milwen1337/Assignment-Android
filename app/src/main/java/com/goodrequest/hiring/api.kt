@@ -4,6 +4,7 @@ import com.goodrequest.hiring.ui.*
 import okhttp3.*
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.logging.HttpLoggingInterceptor
+import okio.IOException
 import org.json.JSONArray
 import org.json.JSONObject
 import ru.gildor.coroutines.okhttp.await
@@ -18,6 +19,13 @@ object PokemonApi {
         client.httpGet(
             url   = pokemon.id.toHttpUrl(),
             parse = ::parsePokemonDetail)
+
+    fun getPokemonsMockError(): Result<List<Pokemon>> =
+        try {
+            throw IOException("There is something wrong here!")
+        }catch (e: Exception){
+            Result.failure(e)
+        }
 }
 
 
