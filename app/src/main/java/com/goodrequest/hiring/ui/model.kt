@@ -20,13 +20,25 @@ class PokemonViewModel(
     val loadState = state.getLiveData<LoadState>("loadState", LoadState.Loading)
 
     fun load(mLoadState: LoadState, mockError: Boolean = false) {
-        Log.i("Info Log", "load")
+        Log.i("PokemonViewModel", "load data")
         loadState.postValue(mLoadState)
         GlobalScope.launch {
             val result = if (mockError)api.getPokemonsMockError() else api.getPokemons(page = 1)
-            Log.i("Info Log", "load - get data")
+            Log.i("PokemonViewModel", "load - get data")
+            if (result.isSuccess){
+                result.getOrNull()?.let { pokemonList ->
+                    Log.i("PokemonViewModel", "load - get details")
+                    pokemonList.forEach { pokemon ->
+                        Log.i("PokemonViewModel", "load - get details: ${pokemon.name}")
+                        val pokemonDetail = api.getPokemonDetail(pokemon)
+                        pokemon.detail = pokemonDetail.getOrNull()
+                    }
+                }
+                Log.i("PokemonViewModel", "load - post details")
+                lastPokemonData.postValue(result.getOrNull())
+            }
+            Log.i("PokemonViewModel", "load - post data")
             pokemons.postValue(result)
-            if (result.isSuccess) lastPokemonData.postValue(result.getOrNull())
         }
     }
 }
@@ -34,7 +46,7 @@ class PokemonViewModel(
 data class Pokemon(
     val id     : String,
     val name   : String,
-    val detail : PokemonDetail? = null): Parcelable
+    var detail : PokemonDetail? = null): Parcelable
 
 @Parcelize
 data class PokemonDetail(
