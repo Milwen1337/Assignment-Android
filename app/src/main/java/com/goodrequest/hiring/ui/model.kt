@@ -17,13 +17,20 @@ class PokemonViewModel(
 
     val lastPokemonData = state.getLiveData<List<Pokemon>?>("lastPokemons", null)
     val pokemons = state.getLiveData<Result<List<Pokemon>>?>("pokemons", null)
-    val loadState = state.getLiveData<LoadState>("loadState", LoadState.Loading)
-
+    val loadState = state.getLiveData<LoadState>("loadState", LoadState.LoadingFirst)
+    val lastLoadedPage = state.getLiveData("loadedPage", 0)
     fun load(mLoadState: LoadState, mockError: Boolean = false) {
         Log.i("PokemonViewModel", "load data")
         loadState.postValue(mLoadState)
         GlobalScope.launch {
-            val result = if (mockError)api.getPokemonsMockError() else api.getPokemons(page = 1)
+            Log.i("PokemonViewModel", "load - get data")
+            val page = (lastLoadedPage.value?:0) + 1
+            Log.i("PokemonViewModel", "load - get data for page $page")
+            val result = if (mockError){
+                api.getPokemonsMockError()
+            } else {
+                api.getPokemons(page = page)
+            }
             Log.i("PokemonViewModel", "load - get data")
             if (result.isSuccess){
                 result.getOrNull()?.let { pokemonList ->
@@ -35,7 +42,7 @@ class PokemonViewModel(
                     }
                 }
                 Log.i("PokemonViewModel", "load - post details")
-                lastPokemonData.postValue(result.getOrNull())
+                lastLoadedPage.postValue(page)
             }
             Log.i("PokemonViewModel", "load - post data")
             pokemons.postValue(result)
@@ -58,7 +65,9 @@ sealed class LoadState: Parcelable {
     @Parcelize
     data object Refreshing: LoadState()
     @Parcelize
-    data object Loading: LoadState()
+    data object LoadingFirst: LoadState()
+    @Parcelize
+    data object LoadingOthers: LoadState()
     @Parcelize
     data object Loaded: LoadState()
 }
