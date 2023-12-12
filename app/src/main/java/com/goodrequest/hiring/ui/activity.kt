@@ -81,7 +81,11 @@ class PokemonActivity: ComponentActivity() {
                 lastData?.let {
                     Log.i("Info Log", "LiveData observer: lastData size: ${lastData.size}")
                     adapter.removeLoading()
-                    showPokemons(items, vm.pokemons.value?.getOrNull().orEmpty())
+                    if (vm.loadState.value == LoadState.Refreshing){
+                        refreshPokemons(items, vm.pokemons.value?.getOrNull().orEmpty())
+                    } else {
+                        showPokemons(items, vm.pokemons.value?.getOrNull().orEmpty())
+                    }
                     vm.loadState.postValue(LoadState.Loaded)
                 }
             }
@@ -91,6 +95,11 @@ class PokemonActivity: ComponentActivity() {
     private fun showPokemons(items: RecyclerView, data: List<Pokemon>){
         if (items.adapter == null) items.adapter = adapter
         adapter.show(data)
+    }
+
+    private fun refreshPokemons(items: RecyclerView, data: List<Pokemon>){
+        if (items.adapter == null) items.adapter = adapter
+        adapter.refresh(data)
     }
 
     private fun showErrorSnackbar(view: ViewGroup, msg: String){

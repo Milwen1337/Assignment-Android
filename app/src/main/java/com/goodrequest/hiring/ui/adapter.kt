@@ -44,7 +44,6 @@ class PokemonAdapter: RecyclerView.Adapter<ItemViewHolder>() {
     }
     override fun getItemCount(): Int =
         items.size
-
     fun show(pokemons: List<Pokemon>) {
         Log.i("PokemonAdapter", "show pokemons: ${pokemons.size}")
         val adapterItems = pokemons.map { PokemonItem(it) }
@@ -52,6 +51,14 @@ class PokemonAdapter: RecyclerView.Adapter<ItemViewHolder>() {
         val lastPos = items.size
         items.addAll(adapterItems)
         notifyItemRangeInserted(lastPos, adapterItems.size)
+    }
+    fun refresh(pokemons: List<Pokemon>) {
+        Log.i("PokemonAdapter", "refresh pokemons: ${pokemons.size}")
+        val adapterItems = pokemons.map { PokemonItem(it) }
+
+        items.clear()
+        items.addAll(adapterItems)
+        notifyDataSetChanged()
     }
     fun addLoading(onRetry: () -> Unit){
         Log.i("PokemonAdapter", "add loading")
@@ -74,8 +81,13 @@ class PokemonAdapter: RecyclerView.Adapter<ItemViewHolder>() {
     fun showRetry(){
         Log.i("PokemonAdapter", "show retry")
         items.indexOfFirst { it is LoaderItem }.takeIf { it != -1 }?.let {
-            (items[it] as? LoaderItem)?.retry = true
-            notifyItemChanged(it)
+            if ((items[it] as? LoaderItem)?.retry == true){
+                items.removeAt(it)
+                notifyItemRemoved(it)
+            } else {
+                (items[it] as? LoaderItem)?.retry = true
+                notifyItemChanged(it)
+            }
         }
     }
 }
@@ -104,7 +116,11 @@ class LoaderItemViewHolder(view: View):  ItemViewHolder(view) {
     fun showLoader(loaderItem: LoaderItem) {
         ui.retryButton.apply {
             visibility = if (loaderItem.retry) VISIBLE else GONE
-            setOnClickListener { loaderItem.onRetry.invoke() }
+            setOnClickListener {
+                visibility = GONE
+                ui.loading.visibility = VISIBLE
+                loaderItem.onRetry.invoke()
+            }
         }
         ui.loading.visibility = if (loaderItem.retry) GONE else VISIBLE
     }
