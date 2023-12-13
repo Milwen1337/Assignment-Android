@@ -1,6 +1,5 @@
 package com.goodrequest.hiring.ui
 
-import android.content.Context
 import android.os.Parcelable
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
@@ -9,14 +8,14 @@ import com.goodrequest.hiring.PokemonApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parcelize
+import java.io.Serializable
 
 class PokemonViewModel(
     state: SavedStateHandle,
-    private val context: Context?,
     private val api: PokemonApi) : ViewModel() {
 
     val lastPokemonData = state.getLiveData<List<Pokemon>?>("lastPokemons", null)
-    val pokemons = state.getLiveData<Result<List<Pokemon>>?>("pokemons", null)
+    val pokemons = state.getLiveData<PokemonResult?>("pokemons", null)
     val loadState = state.getLiveData<LoadState>("loadState", LoadState.LoadingFirst)
     val lastLoadedPage = state.getLiveData("loadedPage", 0)
     fun load(mLoadState: LoadState, mockError: Boolean = false) {
@@ -45,7 +44,7 @@ class PokemonViewModel(
                 lastLoadedPage.postValue(page)
             }
             Log.i("PokemonViewModel", "load - post data")
-            pokemons.postValue(result)
+            pokemons.postValue(PokemonResult(result))
         }
     }
 }
@@ -53,15 +52,15 @@ class PokemonViewModel(
 data class Pokemon(
     val id     : String,
     val name   : String,
-    var detail : PokemonDetail? = null): Parcelable
+    var detail : PokemonDetail? = null): Parcelable, Serializable
 
 @Parcelize
 data class PokemonDetail(
     val image  : String,
     val move   : String,
-    val weight : Int): Parcelable
+    val weight : Int): Parcelable, Serializable
 
-sealed class LoadState: Parcelable {
+sealed class LoadState: Parcelable, Serializable {
     @Parcelize
     data object Refreshing: LoadState()
     @Parcelize
@@ -71,3 +70,7 @@ sealed class LoadState: Parcelable {
     @Parcelize
     data object Loaded: LoadState()
 }
+@Parcelize
+data class PokemonResult(
+    val pokemonResult: Result<List<Pokemon>>?,
+) : Parcelable, Serializable

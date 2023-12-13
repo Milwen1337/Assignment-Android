@@ -92,13 +92,13 @@ class PokemonAdapter: RecyclerView.Adapter<ItemViewHolder>() {
     }
 }
 
-sealed class ViewItemType(val type: Int) {
+sealed class ViewItemType(val type: Int){
     object POKEMON : ViewItemType(1)
     object LOADINGVIEW : ViewItemType(2)
 }
 abstract class AdapterItem(val type: ViewItemType)
-class PokemonItem(val pokemon: Pokemon): AdapterItem(ViewItemType.POKEMON)
-class LoaderItem(var retry: Boolean = false, val onRetry: () -> Unit): AdapterItem(ViewItemType.LOADINGVIEW)
+data class PokemonItem(val pokemon: Pokemon) : AdapterItem(ViewItemType.POKEMON)
+data class LoaderItem(var retry: Boolean = false, val onRetry: () -> Unit) : AdapterItem(ViewItemType.LOADINGVIEW)
 open class ItemViewHolder(view: View): RecyclerView.ViewHolder(view)
 class PokemonItemViewHolder(view: View):  ItemViewHolder(view) {
     private val ui = ItemBinding.bind(view)

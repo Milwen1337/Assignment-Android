@@ -19,7 +19,7 @@ class PokemonActivity: ComponentActivity() {
         super.onCreate(savedInstanceState)
         Log.i("Info Log", "onCreate")
         val isNewInstance = savedInstanceState == null
-        val vm by viewModel { PokemonViewModel(it, null, PokemonApi) }
+        val vm by viewModel { PokemonViewModel(it, PokemonApi) }
         if (isNewInstance) {
             vm.load(LoadState.LoadingFirst)
         }
@@ -41,8 +41,8 @@ class PokemonActivity: ComponentActivity() {
                 }
             })
 
-            vm.pokemons.observe(this@PokemonActivity) { result: Result<List<Pokemon>>? ->
-                result?.fold(
+            vm.pokemons.observe(this@PokemonActivity) { result: PokemonResult? ->
+                result?.pokemonResult?.fold(
                     onSuccess = { pokemons ->
                         Log.i("Info Log", "onSuccess: ${pokemons.size}")
                         val loadState = vm.loadState.value
@@ -82,9 +82,9 @@ class PokemonActivity: ComponentActivity() {
                     Log.i("Info Log", "LiveData observer: lastData size: ${lastData.size}")
                     adapter.removeLoading()
                     if (vm.loadState.value == LoadState.Refreshing){
-                        refreshPokemons(items, vm.pokemons.value?.getOrNull().orEmpty())
+                        refreshPokemons(items, vm.pokemons.value?.pokemonResult?.getOrNull().orEmpty())
                     } else {
-                        showPokemons(items, vm.pokemons.value?.getOrNull().orEmpty())
+                        showPokemons(items, vm.pokemons.value?.pokemonResult?.getOrNull().orEmpty())
                     }
                     vm.loadState.postValue(LoadState.Loaded)
                 }
